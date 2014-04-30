@@ -11,7 +11,7 @@ spec = Gem::Specification.new do |s|
   s.platform      = Gem::Platform::RUBY
   s.summary       = 'A ruby library for working with Machine Readable Cataloging'
   s.license       = "MIT"
-  s.files         = Dir.glob("{lib,test}/**/*") + ["Rakefile", "README.md", "Changes", "LICENSE"]
+  s.files         = Dir.glob("{lib,test}/**/*") + Dir.glob("ext/**/*.{c,rb}") + ["Rakefile", "README.md", "Changes", "LICENSE"]
   s.require_path  = 'lib'
   s.autorequire   = 'marc'
   s.has_rdoc      = true
@@ -20,7 +20,9 @@ spec = Gem::Specification.new do |s|
   s.test_file     = 'test/ts_marc.rb'
   s.bindir        = 'bin'
 
+  s.extensions << "ext/readmarc/extconf.rb"
   s.add_dependency "ensure_valid_encoding"  
 
   s.add_dependency "unf" # unicode normalization
+  s.add_development_dependency "rake-compiler"
 end
