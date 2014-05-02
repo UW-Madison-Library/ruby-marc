@@ -245,6 +245,9 @@ module MARC
           # create a record from the data and return it
           #record = MARC::Record.new_from_marc(raw)
 	while raw = nextmarc(@handle)
+          if raw.length == 0
+            raise MARC::Exception.new("invalid record length: #{raw.length}")
+          end
           record = MARC::Reader.decode(raw, @encoding_options)
           yield record
         end

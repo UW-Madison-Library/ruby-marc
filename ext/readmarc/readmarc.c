@@ -12,6 +12,7 @@
 struct RECORD {
     int len;
     char txt[BBUFSZ];
+    int err;
 };
 
 static VALUE mMARC = Qnil;
@@ -71,18 +72,36 @@ static struct RECORD *next_marc(FILE *fp) {
     static struct RECORD rec;
     char lrecl[6];
     char *b;
+    int i;
+
     lrecl[5] = '\0';
 
     while((b = buf_read(fp, boff, 5)) != NULL) {
-	    if (!isdigit(*b))
-	       break;
 	    memcpy(lrecl, b, 5);
+
+        for (i = 0; i < 5; i++) {
+	        if (!isdigit(lrecl[i])) {
+                rb_raise(rb_eIOError, "FATAL:  invalid record length: '%s'\n", lrecl);
+                rec.err = -1;
+                break;
+            }
+        }
+
+        if (rec.err == -1)
+            break;
+
 	    rec.len = atoi(lrecl);
-	    if (rec.len == 0) break;
+	    if (rec.len == 0) {
+            rb_raise(rb_eIOError, "FATAL:  zero-length record\n");
+            rec.err = -2;
+            break;
+        }
+
 	    if ((b = buf_read(fp, boff, rec.len)) == NULL) {
             rb_raise(rb_eIOError, "FATAL:  marc read failure (loc %08lx: length %d)",
 		            boff, rec.len);
-	        return(NULL);
+            rec.err = -3;
+	        break;
 	    }
 	    memcpy(rec.txt, b, rec.len);
 	    rec.txt[rec.len] = '\0';
@@ -91,6 +110,10 @@ static struct RECORD *next_marc(FILE *fp) {
 	}
 
     boff=0;
+
+    if (rec.err)
+        return(&rec);
+
     return((struct RECORD *)NULL);
 }
 
