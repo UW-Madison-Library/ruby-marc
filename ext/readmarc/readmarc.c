@@ -17,7 +17,6 @@ struct RECORD {
 static VALUE mMARC = Qnil;
 static VALUE cMARCReader = Qnil;
 static VALUE MARC_nextmarc(VALUE self, VALUE file);
-static VALUE MARC_size(VALUE self);
 static VALUE MARC_test(VALUE self, VALUE str);
 char tt[100];
 
@@ -32,7 +31,6 @@ void Init_readmarc() {
     mMARC = rb_define_module("MARC");
     cMARCReader = rb_define_class_under(mMARC, "Reader", rb_cObject);
     rb_define_method(cMARCReader, "nextmarc", MARC_nextmarc, 1);
-    rb_define_method(cMARCReader, "marcsize", MARC_size, 0);
     rb_define_method(cMARCReader, "test", MARC_test, 1);
 }
 
@@ -40,7 +38,6 @@ static VALUE MARC_nextmarc(VALUE self, VALUE file) {
     struct RECORD *r = NULL;
     rb_io_t *fptr;
     FILE *fp;
-    VALUE obj;
 
     if (TYPE (file) != T_FILE) {
         rb_raise (rb_eTypeError, "must provide a file handle.");
@@ -48,17 +45,15 @@ static VALUE MARC_nextmarc(VALUE self, VALUE file) {
     GetOpenFile(file, fptr);
     fp = rb_io_stdio_file(fptr);
 
-    obj = Data_Wrap_Struct(self, NULL, -1, r);
     r = next_marc(fp);
 
-    return obj;
-}
+    if (r == (struct RECORD *)NULL) {
+        return Qnil;
+    }
 
-static VALUE MARC_size(VALUE self) {
-    struct RECORD *r;
-    Data_Get_Struct(self, struct RECORD, r);
-
-    return INT2NUM(r->len);
+    /*  By default in Ruby 1.9+, this should be returned encoded */
+    /* as ASCII-8BIT */
+    return rb_str_new2(r->txt);
 }
 
 static VALUE MARC_test(VALUE self, VALUE str) {
