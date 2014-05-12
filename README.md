@@ -4,6 +4,10 @@
 marc is a ruby library for reading and writing MAchine Readable Cataloging
 (MARC). More information about MARC can be found at <http://www.loc.gov/marc>.
 
+This repository is expiremental and includes native C code for MARC parsing. Currently
+the C reading extension yields a 3% speed improvement over native ruby. However, this
+is not a big enough gain to warrent the added complexity.
+
 ## Usage 
 
     require 'marc'
